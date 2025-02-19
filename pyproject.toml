@@ -1,10 +1,10 @@
 [project]
-name = "f-{lib}"
+name = "f-path"
 version = "0.0.0"
 authors = [
-    {name = "{your_name}", email = "{your@email.com}"},
+    {name = "Yuri Ximenes", email = "yx.dev@gmx.ie"},
 ]
-description = "The f-utils lib that does something."
+description = "The f-utils lib that deals with filepaths."
 readme = "README.md"
 license = {text = "BSD"}
 requires-python = ">=3.9"
