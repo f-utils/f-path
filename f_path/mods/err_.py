@@ -27,3 +27,6 @@ class IsNotAbsolute(Exception):
 
 class NotExist(Exception):
     pass
+
+class AlreadyExist(Exception):
+    pass

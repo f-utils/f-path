@@ -1,4 +1,5 @@
 from pathlib import Path as Pathlib
+from f_path.mods.err_ import IsNotPath
 
 def  is_path(x):
     if isinstance(x, str):
@@ -12,4 +13,4 @@ def  is_path(x):
 def check_path(*args):
     for x in args:
         if not is_path(x):
-            raise AttributeError(f"'{x}' is not a path.")
+            raise IsNotPath(f"'{x}' is not a path.")
