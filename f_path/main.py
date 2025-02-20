@@ -1,19 +1,42 @@
-from pathlib import Path as Pathlib
-from f_path.mods.is_ import Is
-from f_core import Globals as g
+from f_path.mods.path_ import Path as Path_
+from f_path.mods.func_ import *
 
-class MetaPath(type):
-    def __instancecheck__(cls, instance):
-        return g.i.path(instance)
+class Path(Path_):
+    exists   = exists
+    basename = basename
+    parent   = get_parent
+    root     = get_root
+    split    = split
 
-class Path(metaclass=MetaPath):
-    def __new__(cls, path):
-        instance = object.__new__(cls)
-        instance._path = Pathlib(path).resolve()
-        return instance
+    class File:
+        read         = read
+        read_binary  = read_binary
+        write        = write
+        write_binary = write_binary
+        name         = filename
+        extension    = extension
 
-    Is = Is
-    is_ = Is
-    i = is_
+        r   = read
+        rb  = read_binary
+        w   = write
+        wb  = write_binary
+        n   = name
+        ext = extension
 
+        class Lines:
+            list   = lines_list
+            dict   = lines_dict
+            count  = lines_count
 
+        lines = Lines
+        l     = lines
+
+    class Dir:
+        pass
+
+    name = basename
+    e    = exists
+    file = File
+    f    = file
+    dir  = Dir
+    d    = dir
