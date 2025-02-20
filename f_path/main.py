@@ -9,12 +9,14 @@ class Path(Path_):
     parent   = get_parent
     root     = get_root
     split    = split
+    join     = join
     copy     = copy
     move     = move
     remove   = remove
     touch    = make_file
     mkdir    = make_dir
     link     = make_link
+    chmod    = chmod
 
     class File:
         read         = read
