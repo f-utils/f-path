@@ -5,7 +5,9 @@ from f_path.mods.is_ import Is as i
 from f_path.mods.helper_ import check_path
 from os.path import splitext, splitdrive
 from os.path import exists as _exists
-from shutil import copy2, copytree
+from os import remove as _remove
+from shutil import copy2, copytree, rmtree
+from shutil import move as _move
 
 @t.TF
 def exists(path: str) -> bool:
@@ -54,10 +56,18 @@ def basename(path: str) -> str:
     return _Path(path).name
 
 @t.TF
+def basename(path: str) -> str:
+    check_path(path)
+    return _Path(path).name
+
+@t.TF
 def filename(file: str) -> str:
     check_path(file)
-    name, _ = os.path.splitext(bn(x))
-    return name
+    if i.file(file):
+        name, _ = splitext(basename(x))
+        return name
+    else:
+        raise 
 
 @t.TF
 def extension(file: str) -> str:
@@ -102,7 +112,7 @@ def get_parent(path: str, N: int = 1) -> str:
 def get_root(path: str) -> str:
     check_path(path)
     if i.windows(path):
-        root, _ = os.path.splitdrive(_Path(path))
+        root, _ = splitdrive(_Path(path))
         return root
     else:
         parts = _Path(path).parts
@@ -126,13 +136,45 @@ def here(path: str) -> str:
     return str(_Path(join(get_parent(__file__), path)).resolve())
 
 @t.TF
-def copy_file(file: str, path: str) -> type(None):
-    check_path(file, path)
-    if i.file(file):
-        if i.dir(path):
-            file_name = basename(file)
-            shutil.copy2(file, join(path, file_name))
-        else:
-            shutil.copy2(file, path)
+def copy(src: str, dst: str) -> type(None):
+    check_path(src, dst)
+    if not exists(src):
+        raise FileNotFoundError(f"The source path '{src}'  does not exist.")
+    if i.dir(src):
+        copytree(src, dst)
     else:
-        raise FileExistsError(f"The file '{input_path}' does not exists.")
+        copy2(src, dst)
+
+@t.TF
+def move(src: str, dst: str) -> type(None):
+    check_path(src, dst)
+    if not exists(src):
+        raise FileNotFoundError(f"The source path '{src}' does not exist.")
+    _move(src, dst)
+
+@t.TF
+def remove(path: str) -> type(None):
+    check_path(path)
+    if not exists(path):
+        raise FileNotFoundError(f"The path '{path}' does not exist.")
+    if i.dir(path):
+        rmtree(path)
+    else:
+        _remove(path)
+
+@t.TF
+def list_all(dir: str) -> list:
+    check_path(dir)
+    if i.dir(dir):
+        return list(i for i in _Path(dir).iterdir())
+    else:
+        raise NotADirectoryError(f"'{dir}' is not a directory.")
+
+@t.TF
+def list_all(dir):
+    check_path(dir)
+    if i.dir(dir):
+        return [i for i in _Path(dir).iterdir()]
+    else:
+        raise NotADirectoryError(f"'{dir}' is not a directory.")
+
