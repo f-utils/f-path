@@ -8,6 +8,11 @@ from os.path import exists as _exists
 from os import remove as _remove
 from shutil import copy2, copytree, rmtree
 from shutil import move as _move
+from f_path.mods.err_ import (
+    IsNotFile,
+    IsNotDir,
+    NotExist
+)
 
 @t.TF
 def exists(path: str) -> bool:
@@ -27,7 +32,7 @@ def read(file: str, encoding: str = 'utf-8') -> [str, bytes]:
                 content = f.read()
             return content
     else:
-        raise AttributeError(f"'{file}' is not an existing file.")
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def read_binary(file: str) -> bytes:
@@ -36,15 +41,18 @@ def read_binary(file: str) -> bytes:
 @t.TF
 def write(content: str, file: str, encoding: str ='utf-8', overwrite: bool = True) -> type(None):
     check_path(file)
-    if encoding == 'bin' or encoding == 'binary':
-        with open(file, 'wb', encoding=encoding) as f:
-            f.write(content)
-    elif overwrite:
-        with open(file, 'w', encoding=encoding) as f:
-            f.write(content)
+    if i.file(file):
+        if encoding == 'bin' or encoding == 'binary':
+            with open(file, 'wb', encoding=encoding) as f:
+                f.write(content)
+        elif overwrite:
+            with open(file, 'w', encoding=encoding) as f:
+                f.write(content)
+        else:
+            with open(file, 'a', encoding=encoding) as f:
+                f.write(content)
     else:
-        with open(file, 'a', encoding=encoding) as f:
-            f.write(content)
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def write_binary(file: str) -> type(None):
@@ -56,24 +64,30 @@ def basename(path: str) -> str:
     return _Path(path).name
 
 @t.TF
-def basename(path: str) -> str:
-    check_path(path)
-    return _Path(path).name
+def dirname(dir: str) -> str:
+    check_path(dir)
+    if i.dir(dir):
+        return basename(dir)
+    else:
+        raise IsNotDir(f"'{dir}' is not an existing directory.")
 
 @t.TF
 def filename(file: str) -> str:
     check_path(file)
     if i.file(file):
-        name, _ = splitext(basename(x))
+        name, _ = splitext(basename(file))
         return name
     else:
-        raise 
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def extension(file: str) -> str:
     check_path(file)
-    _, ext = os.path.splitext(bn(x))
-    return ext
+    if i.file(file):
+        _, ext = splitext(basename(file))
+        return ext
+    else:
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def lines_list(file: str, encoding: str = 'utf-8') -> list:
@@ -81,7 +95,7 @@ def lines_list(file: str, encoding: str = 'utf-8') -> list:
     if i.file(file):
         return read(file, encoding).splitlines()
     else:
-        raise AttributeError(f"'{file}' is not an existing file.")
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def lines_dict(file: str, encoding: str = 'utf-8') -> dict:
@@ -93,13 +107,16 @@ def lines_dict(file: str, encoding: str = 'utf-8') -> dict:
                 lines_dict[line_number] = line_content.rstrip('\n')
         return lines_dict
     else:
-        raise AttributeError(f"'{file}' is not an existing file.")
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def lines_count(file: str, encoding: str = 'utf-8') -> int:
     check_path(file)
-    with open(file, 'r', encoding=encoding) as f:
-        return sum(1 for _ in f)
+    if i.file(file):
+        with open(file, 'r', encoding=encoding) as f:
+            return sum(1 for _ in f)
+    else:
+        raise IsNotFile(f"'{file}' is not an existing file.")
 
 @t.TF
 def get_parent(path: str, N: int = 1) -> str:
@@ -139,7 +156,7 @@ def here(path: str) -> str:
 def copy(src: str, dst: str) -> type(None):
     check_path(src, dst)
     if not exists(src):
-        raise FileNotFoundError(f"The source path '{src}'  does not exist.")
+        raise NotExist(f"The source path '{src}'  does not exist.")
     if i.dir(src):
         copytree(src, dst)
     else:
@@ -149,14 +166,14 @@ def copy(src: str, dst: str) -> type(None):
 def move(src: str, dst: str) -> type(None):
     check_path(src, dst)
     if not exists(src):
-        raise FileNotFoundError(f"The source path '{src}' does not exist.")
+        raise NotExist(f"The source path '{src}' does not exist.")
     _move(src, dst)
 
 @t.TF
 def remove(path: str) -> type(None):
     check_path(path)
     if not exists(path):
-        raise FileNotFoundError(f"The path '{path}' does not exist.")
+        raise NotExist(f"The path '{path}' does not exist.")
     if i.dir(path):
         rmtree(path)
     else:
@@ -166,15 +183,38 @@ def remove(path: str) -> type(None):
 def list_all(dir: str) -> list:
     check_path(dir)
     if i.dir(dir):
-        return list(i for i in _Path(dir).iterdir())
+        return list(j for j in _Path(dir).iterdir())
     else:
-        raise NotADirectoryError(f"'{dir}' is not a directory.")
+        raise IsNotDir(f"'{dir}' is not a directory.")
 
 @t.TF
-def list_all(dir):
+def list_files(dir: str) -> list:
     check_path(dir)
     if i.dir(dir):
-        return [i for i in _Path(dir).iterdir()]
+        return list(j for j in _Path(dir).iterdir() if i.file(j))
     else:
-        raise NotADirectoryError(f"'{dir}' is not a directory.")
+        raise IsNotDir(f"'{dir}' is not a directory.")
 
+@t.TF
+def list_dirs(dir: str) -> list:
+    check_path(dir)
+    if i.dir(dir):
+        return list(j for j in _Path(dir).iterdir() if i.dir(j))
+    else:
+        raise IsNotDir(f"'{dir}' is not a directory.")
+
+@t.TF
+def list_links(dir: str) -> list:
+    check_path(dir)
+    if i.dir(dir):
+        return list(j for j in _Path(dir).iterdir() if i.link(j))
+    else:
+        raise IsNotDir(f"'{dir}' is not a directory.")
+
+@t.TF
+def list_mount(dir: str) -> list:
+    check_path(dir)
+    if i.dir(dir):
+        return list(j for j in _Path(dir).iterdir() if i.mount(j))
+    else:
+        raise IsNotDir(f"'{dir}' is not a directory.")
