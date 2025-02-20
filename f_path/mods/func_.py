@@ -13,7 +13,8 @@ from fnmatch import fnmatch
 from f_path.mods.err_ import (
     IsNotFile,
     IsNotDir,
-    NotExist
+    NotExist,
+    AlreadyExist
 )
 
 @t.TF
@@ -305,3 +306,33 @@ def depth(dir: str) -> int:
     else:
         raise IsNotDir(f"'{dir}' is not an existing directory.")
 
+@t.TF
+def make_file(file: str) -> type(None):
+    check_path(file)
+    if not exists(file):
+        _Path.touch(file)
+    elif i.file(file):
+        raise AlreadyExist(f"The file '{file}' already exists.")
+    elif i.dir(file):
+        raise AlreadyExist(f"There already exists a directory '{file}'.")
+    elif i.link(file):
+        raise AlreadyExist(f"The file '{file}' already exists as a symlink.")
+
+@t.TF
+def make_dir(dir: str) -> type(None):
+    check_path(dir)
+    if not exists(dir):
+        _Path.mkdir(dir)
+    elif i.file(dir):
+        raise AlreadyExist(f"There already exists a file '{dir}'.")
+    elif i.dir(dir):
+        raise AlreadyExist(f"The directory '{dir}' already exists.")
+    elif i.link(dir):
+        raise AlreadyExist(f"The directory '{dir}' already exists as a symlink.")
+
+@t.TF
+def make_link(src: str, dst: str) -> type(None):
+    check(dst, src)
+    if not exists(dst):
+        raise NotExist(f"The destination path '{dst}' does not exist.")
+    _Path(src).symlink_to(_Path(dst))
