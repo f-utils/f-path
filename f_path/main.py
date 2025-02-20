@@ -1,5 +1,6 @@
 from f_path.mods.path_ import Path as Path_
 from f_path.mods.func_ import *
+from f_path.mods.err_ import *
 
 class Path(Path_):
     exists   = exists
@@ -72,6 +73,19 @@ class Path(Path_):
         ls   = list
         find = Finder
 
+    class Err:
+        IsNotPath     = IsNotPath
+        IsNotFile     = IsNotFile
+        IsNotDir      = IsNotDir
+        IsNotSymlink  = IsNotSymlink
+        IsNotAbsolute = IsNotAbsolute
+        IsNotRelative = IsNotRelative
+        IsNotMount    = IsNotMount
+        IsNotPosix    = IsNotPosix
+        IsNotWindows  = IsNotWindows
+        NotExist      = NotExist
+        AlreadyExist  = AlreadyExist
+
     e    = exists
     pwd  = cwd
     name = basename
@@ -86,3 +100,4 @@ class Path(Path_):
     f    = file
     dir  = Dir
     d    = dir
+    err  = Err
