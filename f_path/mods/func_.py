@@ -26,18 +26,6 @@ def cwd() -> str:
     return str(_Path().cwd())
 
 @t.TF
-def depth(dir: str) -> int:
-    check_path(dir)
-    if i.dir(dir):
-        def max_depth(path, current_depth):
-            if not any(path.iterdir()) or not path.is_dir():
-                return current_depth
-            return max(max_depth(subdir, current_depth + 1) for subdir in path.iterdir() if subdir.is_dir())
-        return max_depth(Path(directory), 0)
-    else:
-        raise IsNotDir(f"'{dir}' is not an existing directory.")
-
-@t.TF
 def read(file: str, encoding: str = 'utf-8') -> [str, bytes]:
     check_path(file)
     if i.file(file):
@@ -253,7 +241,7 @@ def _list(dir: str, kind: str = 'all') -> list:
         raise ValueError('kind must be None, "file", "dir", "link", or "mount"')
 
 @t.TF
-def find(dir: str, pattern: str = '*', kind: str = 'any', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
+def find(dir: str, pattern: str = '*', kind: str = 'any', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
     check_path(dir)
     if i.dir(dir):
         _dir = _Path(dir)
@@ -279,27 +267,41 @@ def find(dir: str, pattern: str = '*', kind: str = 'any', mindepth: int = 0, max
                     ((kind == 'link' or kind == 'links' or kind == 'l') and i.link(entry_path)) or
                     ((kind == 'mount' or kind == 'mounts' or kind == 'm') and i.mount(entry_path)) or
                     (kind == 'any' or kind == 'Any' or kind == 'a')):
-                    matches.append(entry_path)
+                    matches.append(str(entry_path))
         return matches
     else:
         raise IsNotDir(f"'{dir}' is not an existing directory")
 
 @t.TF
-def find_any(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
-    return find(dir, pattern, mindepth, maxdepth, kind='any')
+def find_any(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
+    return find(dir, pattern=pattern, mindepth=mindepth, maxdepth=maxdepth, kind='any')
 
 @t.TF
-def find_files(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
-    return find(dir, pattern, mindepth, maxdepth, kind='file')
+def find_files(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
+    return find(dir, pattern=pattern, mindepth=mindepth, maxdepth=maxdepth, kind='file')
 
 @t.TF
-def find_dirs(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
-    return find(dir, pattern, mindepth, maxdepth, kind='dir')
+def find_dirs(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
+    return find(dir, pattern=pattern, mindepth=mindepth, maxdepth=maxdepth, kind='dir')
 
 @t.TF
-def find_links(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
-    return find(dir, pattern, mindepth, maxdepth, kind='link')
+def find_links(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
+    return find(dir, pattern=pattern, mindepth=mindepth, maxdepth=maxdepth, kind='link')
 
 @t.TF
-def find_mounts(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: int = float('inf')) -> list:
-    return find(dir, pattern, mindepth, maxdepth, kind='mount')
+def find_mounts(dir: str, pattern: str = '*', mindepth: int = 0, maxdepth: float = float('inf')) -> list:
+    return find(dir, pattern=pattern, mindepth=mindepth, maxdepth=maxdepth, kind='mount')
+
+@t.TF
+def depth(dir: str) -> int:
+    check_path(dir)
+    if i.dir(dir):
+        def max_depth(path, current_depth):
+            subdirs = list_dirs(str(path))
+            if not subdirs:
+                return current_depth
+            return max(max_depth(subdir, current_depth + 1) for subdir in subdirs)
+        return max_depth(_Path(dir), 0)
+    else:
+        raise IsNotDir(f"'{dir}' is not an existing directory.")
+
