@@ -2,7 +2,7 @@ from f import f
 from f_core import t, o
 from pathlib import Path as _Path
 from f_path.mods.is_ import Is as i
-from f_path.mods.helper_ import check_path
+from f_path.mods.helper_ import check_path, symbolic_to_octal
 from os.path import splitext, splitdrive
 from os.path import exists as _exists
 from os import remove as _remove
@@ -18,9 +18,12 @@ from f_path.mods.err_ import (
 )
 
 @t.TF
-def exists(path: str) -> bool:
-    check_path(path)
-    return _exists(path)
+def exists(*paths: str) -> bool:
+    check_path(*paths)
+    for path in paths:
+        if not _exists(path) and not i.link(path):
+            return False
+    return True
 
 @t.TF
 def cwd() -> str:
@@ -160,31 +163,42 @@ def here(path: str) -> str:
     return str(_Path(join(get_parent(__file__), path)).resolve())
 
 @t.TF
-def copy(src: str, dst: str) -> type(None):
-    check_path(src, dst)
-    if not exists(src):
-        raise NotExist(f"The source path '{src}'  does not exist.")
-    if i.dir(src):
-        copytree(src, dst)
-    else:
-        copy2(src, dst)
+def copy(*srcs_and_dst: str) -> type(None):
+    if len(srcs_and_dst) < 2:
+        raise ValueError("Provide at least one source and one destination.")
+    *srcs, dst = srcs_and_dst
+    check_path(*srcs, dst)
+    for src in srcs:
+        if not exists(src):
+            raise NotExist(f"The source path '{src}' does not exist.")
+        if i.dir(src):
+            copytree(src, dst)
+        else:
+            copy2(src, dst)
 
 @t.TF
-def move(src: str, dst: str) -> type(None):
-    check_path(src, dst)
-    if not exists(src):
-        raise NotExist(f"The source path '{src}' does not exist.")
-    _move(src, dst)
+def move(*srcs_and_dst: str) -> type(None):
+    if len(srcs_and_dst) < 2:
+        raise ValueError("Provide at least one source and one destination.")
+    *srcs, dst = srcs_and_dst
+    check_path(*srcs, dst)
+    for src in srcs:
+        if not exists(src):
+            raise NotExist(f"The source path '{src}' does not exist.")
+        _move(src, _Path(dst))
 
 @t.TF
-def remove(path: str) -> type(None):
-    check_path(path)
-    if not exists(path):
-        raise NotExist(f"The path '{path}' does not exist.")
-    if i.dir(path):
-        rmtree(path)
-    else:
-        _remove(path)
+def remove(*paths: str) -> type(None):
+    check_path(*paths)
+    for path in paths:
+        if not exists(path):
+            raise NotExist(f"The path '{path}' does not exist.")
+        if i.dir(path):
+            rmtree(path)
+        elif i.link(path):
+            _Path.unlink(path)
+        else:
+            _remove(path)
 
 @t.TF
 def list_all(dir: str) -> list:
@@ -307,32 +321,55 @@ def depth(dir: str) -> int:
         raise IsNotDir(f"'{dir}' is not an existing directory.")
 
 @t.TF
-def make_file(file: str) -> type(None):
-    check_path(file)
-    if not exists(file):
-        _Path.touch(file)
-    elif i.file(file):
-        raise AlreadyExist(f"The file '{file}' already exists.")
-    elif i.dir(file):
-        raise AlreadyExist(f"There already exists a directory '{file}'.")
-    elif i.link(file):
-        raise AlreadyExist(f"The file '{file}' already exists as a symlink.")
+def make_file(*files: str) -> type(None):
+    check_path(*files)
+    for file in files:
+        if not exists(file):
+            _Path.touch(file)
+        elif i.file(file):
+            raise AlreadyExist(f"The file '{file}' already exists.")
+        elif i.dir(file):
+            raise AlreadyExist(f"There already exists a directory '{file}'.")
+        elif i.link(file):
+            raise AlreadyExist(f"The file '{file}' already exists as a symlink.")
 
 @t.TF
-def make_dir(dir: str) -> type(None):
-    check_path(dir)
-    if not exists(dir):
-        _Path.mkdir(dir)
-    elif i.file(dir):
-        raise AlreadyExist(f"There already exists a file '{dir}'.")
-    elif i.dir(dir):
-        raise AlreadyExist(f"The directory '{dir}' already exists.")
-    elif i.link(dir):
-        raise AlreadyExist(f"The directory '{dir}' already exists as a symlink.")
+def make_dir(*dirs: str) -> type(None):
+    check_path(*dirs)
+    for dir in dirs:
+        if not exists(dir):
+            _Path.mkdir(dir)
+        elif i.file(dir):
+            raise AlreadyExist(f"There already exists a file '{dir}'.")
+        elif i.dir(dir):
+            raise AlreadyExist(f"The directory '{dir}' already exists.")
+        elif i.link(dir):
+            raise AlreadyExist(f"The directory '{dir}' already exists as a symlink.")
 
 @t.TF
 def make_link(src: str, dst: str) -> type(None):
-    check(dst, src)
-    if not exists(dst):
-        raise NotExist(f"The destination path '{dst}' does not exist.")
-    _Path(src).symlink_to(_Path(dst))
+    check_path(dst, src)
+    if not exists(src):
+        raise NotExist(f"The source path '{src}' does not exist.")
+    _Path(dst).symlink_to(_Path(src))
+
+@t.TF
+def chmod(path: str, mode: str, recursive: bool = False) -> type(None):
+    check_path(path)
+    if isinstance(mode, str):
+        if mode.isdigit():
+            mode = int(mode, 8)
+        else:
+            mode = symbolic_to_octal(mode)
+    def apply_mode(target):
+        if isinstance(mode, int):
+            target.chmod(mode)
+        else:
+            raise ValueError("Mode must be an integer, a string of octal digits, or symbolic permissions like 'rwxr-xr-x'.")
+    if recursive:
+        for subpath in _Path(path).rglob('*'):
+            apply_mode(subpath)
+        apply_mode(_Path(path))
+    else:
+        apply_mode(_Path(path))
+
