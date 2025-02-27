@@ -17,3 +17,7 @@ requires = [
     "git+https://github.com/f-utils/f-core"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["f_path*"]
