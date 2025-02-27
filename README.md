@@ -16,9 +16,6 @@
 # About
 
 `f-path` is the  `f-utils` lib that deals with filepaths.
-- website: [futils.org/libs/f-path](https://futils.org/libs/f-path)
-- contact: [futils@gmx.ie](mailto:futils@gmx.ie)
-- discord: [coolab](https://discord.gg/waANUyCUGE)
 
 # Structure
 
@@ -40,14 +37,14 @@ The installation is from the branches `main` and `dev` of this repository.
 /path/to/venv/bin/pip install git+https://github.com/f-utils/f-path/tree/dev
 ```
 
-For other installation methods, see [futils.org/install](https://futils.org/install).
+For other installation methods, see [futils.org/install](https://futils.org/docs/libs/install).
 
 # Usage
 
 The lib provides the class `Path`. We suggest to import it as:
 
 ```python
-from f_path import Path as path
+from f_path import Path
 ```
 
 For more details, see [futils.org/libs/f-path](https://futils.org/libs/f-path).
